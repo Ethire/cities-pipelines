@@ -12,7 +12,7 @@ nb_chateau = 3
 G = nx.Graph()
 
 G = nx.binomial_tree(order)  # sorte d'arbre, d'ordre n, soit 2**n noeuds, forme un peu aléatoire
-pos = nx.spring_layout(G, k=0.3, iterations=100, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
+pos = nx.spring_layout(G, k=0.3, iterations=300, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
 
 # Pour rajouter une maison (un noeud) à chaque noeud deja existant, sauf le noeud 0, permet d'ajouter la maison à angle droit avec le tuyau
 for i in range(1, len(pos)):
@@ -40,7 +40,7 @@ for i in range(1, len(pos)):
 if nb_chateau >= 1:
     G.add_node("C1", type="chateau")
     G.add_edge("C1", 0)
-    pos["C1"] = np.array([pos[0][0] + 0.2*random.randint(-1, 1), pos[0][1] + 0.2*random.randint(-1, 1)])   # remplacer randint par uniform ??
+    pos["C1"] = np.array([pos[0][0] + 0.2*random.uniform(-1, 1), pos[0][1] + 0.2*random.uniform(-1, 1)])   
 
 if nb_chateau >= 2:
     node_degree2 = [node for node in G.nodes() if G.degree(node) == 2]
@@ -52,7 +52,7 @@ if nb_chateau >= 2:
 
         G.add_node(f"C{i}", type="chateau")
         G.add_edge(f"C{i}", node)
-        pos[f"C{i}"] = np.array([pos[node][0] + 0.2*random.randint(-1, 1), pos[node][1] + 0.2*random.randint(-1, 1)])   # remplacer randint par uniform ??
+        pos[f"C{i}"] = np.array([pos[node][0] + 0.2*random.uniform(-1, 1), pos[node][1] + 0.2*random.uniform(-1, 1)])   
 
 
 # for i in range (1, nb_chateau+1):
@@ -60,6 +60,9 @@ if nb_chateau >= 2:
 #     j = random.randint(0, 2**order)
 #     G.add_edge(f"C{i}", j)
 #     pos[f"C{i}"] = np.array([pos[j][0] + 0.1*random.randint(-1, 1), pos[j][1] + 0.1*random.randint(-1, 1)]) 
+
+
+pos = nx.spring_layout(G, k=0.3, iterations=500, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
 
 
 # Affichage
