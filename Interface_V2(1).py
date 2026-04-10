@@ -8,9 +8,9 @@ import numpy as np
 # PALETTE
 # ══════════════════════════════════════════════════════════════════
 
-BG_DEEP    = "#070d1a"
-BG_DARK    = "#0c1630"
-BG_CARD    = "#0f1e3d"
+BG_DEEP    = "#5b74a7" #fenetre
+BG_DARK    = "#4766af"
+BG_CARD    = "#06192C"
 BG_INPUT   = "#132248"
 BORDER     = "#1e3a6a"
 ACCENT     = "#2563eb"
@@ -19,14 +19,14 @@ TXT_MAIN   = "#dce9fb"
 TXT_SUB    = "#6a93c8"
 TXT_DIM    = "#3a5a8a"
 
-NODE_RES    = "#0ea5e9"   # réservoir  — bleu clair
-NODE_JUNC   = "#2563eb"   # jonction   — bleu
-NODE_HOUSE  = "#6366f1"   # maison     — indigo
+NODE_RES    = "#e9ba0e"   # réservoir  — bleu clair
+NODE_JUNC   = "#06112a"   # jonction   — bleu
+NODE_HOUSE  = "#f163a3"   # maison     — indigo
 NODE_FAULT  = "#ef4444"   # cassé      — rouge
 NODE_SURGE  = "#f59e0b"   # surge      — orange
 NODE_ZERO   = "#6b7280"   # pression 0 — gris
-EDGE_MAIN   = "#1e3a6a"   # conduite principale
-EDGE_SEC    = "#0f2a50"   # conduite secondaire (vers maison)
+EDGE_MAIN   = "#bfc5ce"   # conduite principale
+EDGE_SEC    = "#26bef0"   # conduite secondaire (vers maison)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -271,12 +271,14 @@ class App(ctk.CTk):
         try:    n_chateaux = max(1, int(params["n_chateaux"]))
         except: n_chateaux = 1
         try:    zone = params["Zone"]
-        except: zone = "Rurale"
+        except: zone = "Urbaine"
 
         # cap visuel : au-delà de 60 maisons le canvas devient illisible
         n_maisons = min(n_maisons, 60)
-
+        random.seed(20)
         G = nx.Graph()
+
+       # zone  = params["Zone"]
 
         if zone == "Rurale":
             order = math.trunc(math.log(n_maisons)/math.log(2)) # rajouter des maisons au hasard (difference entre puissance de 2 et nb voulu)
@@ -327,6 +329,66 @@ class App(ctk.CTk):
             mapping = {node: node.replace("MJ", "M") for node in G.nodes() if node.startswith("MJ")}
             G = nx.relabel_nodes(G, mapping) 
             pos = {mapping.get(k, k): v for k, v in pos.items()}
+            print(G.nodes())
+
+    
+        else:
+                
+                #len_pipes = 0.85         
+                iter = 500 
+
+                n = int(np.sqrt(n_maisons * 1)) 
+                G = nx.grid_2d_graph(n, n)
+
+                mapping = {old_node: f"J{i+1}" for i, old_node in enumerate(G.nodes())}
+                G = nx.relabel_nodes(G, mapping)
+                print(G.nodes())
+                edges = list(G.edges())
+                to_remove = random.sample(edges, int(len(edges) * 0.10))
+                G.remove_edges_from(to_remove)
+
+                # Pour mettre le bon nombre de maisons
+                maisons_placees = 0
+                edges_disponibles = list(G.edges())
+                random.shuffle(edges_disponibles)
+                nb_j = G.number_of_nodes()
+                ##### pour être sûr que toutes les jonctions sont bien de type junction #####
+                for node in G.nodes():
+                    G.nodes[node]['type'] = 'junction'
+                ################################
+
+                for u, v in edges_disponibles:
+                    if maisons_placees >= n_maisons:
+                        break
+
+                    id_maison = maisons_placees + 1
+                    nom_branchement = f"J{nb_j + id_maison}"
+                    nom_maison = f"M{id_maison}"
+                    
+                    G.remove_edge(u, v)
+                    G.add_node(nom_branchement, type='junction') 
+                    G.add_edge(u, nom_branchement)
+                    G.add_edge(nom_branchement, v)
+                    
+                    G.add_node(nom_maison, type='house')
+                    G.add_edge(nom_branchement, nom_maison)
+                    maisons_placees += 1
+
+                #pour gérer l'écart entre les maisons
+                pos = nx.spring_layout(G, k=1.2/np.sqrt(len(G.nodes())), iterations=iter, seed=42)
+
+                # Pour ajouter les chateaux d'eau
+                noeuds_existants = list(G.nodes())
+                for i in range(1, n_chateaux+1):
+                    val_inf = round(((i-1)/n_chateaux)*len(noeuds_existants))
+                    val_sup = round((i/n_chateaux)*len(noeuds_existants))
+                    noeud_chateau = random.choice(noeuds_existants[val_inf:val_sup])
+                    chateau_node = f"C{i}"
+                    G.add_node(chateau_node, type="chateau")
+                    G.add_edge(chateau_node, noeud_chateau)
+                    pos[chateau_node] = np.array([pos[noeud_chateau][0] + 0.2 * random.uniform(-1, 1), pos[noeud_chateau][1] + 0.2 * random.uniform(-1, 1)])
+
+                pos = nx.spring_layout(G, k=0.3, iterations=iter, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible, avant d'ajouter les maisons
 
         w   = max(self.cv.winfo_width(),  200)
         h   = max(self.cv.winfo_height(), 200)
@@ -340,12 +402,8 @@ class App(ctk.CTk):
         
         return pos
 
-        """elif zone == "Urbaine":
-            return 0
-        """
-
-
-    
+        
+                       
 # ══════════════════════════════════════════════════════════════════
 #  DESSIN
 # ══════════════════════════════════════════════════════════════════
@@ -353,22 +411,27 @@ class App(ctk.CTk):
     def _redraw(self):
         if self._G is None:
             self._draw_empty(); return
+        
         self.cv.delete("all")
+        
+        # 1. Fond couleur "papier ancien"
+        self.cv.config(bg='#fdfcf5') 
+        
         self._pos_px     = self._build_graph(self._params)[1]
         self._node_items = {}
 
-        # arêtes secondaires (maisons) — en premier, sous les nœuds
+        # 2. Arêtes (Tuyaux) — dessinés en premier pour être en dessous
         for u, v, d in self._G.edges(data=True):
             x1, y1 = self._pos_px[u]
             x2, y2 = self._pos_px[v]
+            
+            # Si tu as défini des tuyaux secondaires (ex: vers les maisons)
             if d.get("etype") == "secondary":
-                self.cv.create_line(x1, y1, x2, y2,
-                                    fill=EDGE_SEC, width=1, dash=(4, 3))
+                self.cv.create_line(x1, y1, x2, y2, fill='#4682B4', width=1.5)
             else:
-                self.cv.create_line(x1, y1, x2, y2,
-                                    fill=EDGE_MAIN, width=3)
+                self.cv.create_line(x1, y1, x2, y2, fill='#4682B4', width=2.5)
 
-        # nœuds
+        # 3. Nœuds
         for node in self._G.nodes():
             self._draw_node(node)
 
@@ -378,50 +441,68 @@ class App(ctk.CTk):
         ntype = self._G.nodes[node].get("type", "junction")
         state = self._node_state.get(node, "normal")
 
-        # couleur selon état ou type
-        if state != "normal":
-            color = {"broken": NODE_FAULT, "surge": NODE_SURGE, "zero": NODE_ZERO}[state]
-        else:
-            color = {"reservoir": NODE_RES, "junction": NODE_JUNC, "house": NODE_HOUSE}.get(ntype, NODE_JUNC)
-
-        # taille selon type
-        r = {"reservoir": 18, "junction": 12, "house": 7}.get(ntype, 10)
-
         self.cv.delete(f"node_{node}")
         self.cv.delete(f"label_{node}")
 
-        if ntype == "reservoir":
-            self.cv.create_rectangle(x-r, y-r, x+r, y+r,
-                                     fill=color, outline=TXT_MAIN, width=2,
-                                     tags=(f"node_{node}", "node"))
-        elif ntype == "house":
-            # petit carré pour les maisons
-            self.cv.create_rectangle(x-r, y-r, x+r, y+r,
-                                     fill=color, outline=TXT_DIM, width=1,
-                                     tags=(f"node_{node}", "node"))
+        # --- GESTION DES COULEURS ET ÉTATS ---
+        if state != "normal":
+            # Garde tes couleurs d'erreur si la simulation tourne (à définir dans tes constantes)
+            color = {"broken": "red", "surge": "orange", "zero": "black"}.get(state, "red")
         else:
+            # Nos couleurs "design" pour le fonctionnement normal
+            color = {"reservoir": "#2980b9", "connection": "gray", "house": "#CD5C5C"}.get(ntype, "#2c3e50")
+
+        # --- DESSIN SELON LE TYPE ---
+        
+        if ntype == "reservoir":
+            # Réservoir : Grand carré bleu foncé
+            r = 15
+            self.cv.create_rectangle(x-r, y-r, x+r, y+r,
+                                     fill=color, outline='black', width=2,
+                                     tags=(f"node_{node}", "node"))
+            self.cv.create_text(x, y + r + 10, text=node,
+                                fill='black', font=("Arial", 10, "bold"),
+                                tags=f"label_{node}")
+
+        elif ntype == "connection":
+            # Branchements (B1, B2...) : Petit point gris discret, SANS texte
+            r = 3
             self.cv.create_oval(x-r, y-r, x+r, y+r,
-                                fill=color, outline=TXT_MAIN, width=2,
+                                fill=color, outline=color,
                                 tags=(f"node_{node}", "node"))
 
-        # label seulement pour réservoir et jonctions (trop chargé pour les maisons)
-        if ntype != "house":
-            self.cv.create_text(x, y + r + 10, text=node,
-                                fill=TXT_SUB, font=("Courier", 8),
+        elif ntype == "house":
+            # Maisons (M1, M2...) : Gros rond rouge, texte BLANC au centre
+            r = 12
+            self.cv.create_oval(x-r, y-r, x+r, y+r,
+                                fill=color, outline='black', width=1,
+                                tags=(f"node_{node}", "node"))
+            
+            # Nom de la maison à l'intérieur du rond (ex: "M1")
+            self.cv.create_text(x, y, text=node,
+                                fill='white', font=("Arial", 8, "bold"),
                                 tags=f"label_{node}")
-        else:
-            # numéro discret sur la maison
-            self.cv.create_text(x, y, text=node.replace("M", ""),
-                                fill=TXT_MAIN, font=("Courier", 6),
+
+        else: 
+            # Carrefours / Junctions (N1, N2...) : AUCUN point dessiné, JUSTE le texte
+            self.cv.create_text(x, y, text=node,
+                                fill='#2c3e50', font=("Arial", 10, "bold"),
                                 tags=f"label_{node}")
 
     def _draw_empty(self):
-        self.cv.delete("all")
-        w = max(self.cv.winfo_width(), 200)
-        h = max(self.cv.winfo_height(), 200)
-        self.cv.create_text(w // 2, h // 2,
-                            text="Générez un réseau\npour l'afficher ici",
-                            fill=TXT_DIM, font=("Courier", 13), justify="center")
+            self.cv.delete("all")
+            # On récupère la taille actuelle du canvas
+            w = max(self.cv.winfo_width(), 200)
+            h = max(self.cv.winfo_height(), 200)
+            
+            # On écrit le message au centre
+            self.cv.create_text(
+                w // 2, h // 2,
+                text="🏠 Réseau non généré\n\nConfigurez les paramètres à gauche\npuis cliquez sur 'Générer réseau'",
+                fill=TXT_DIM, 
+                font=("Arial", 12, "italic"), 
+                justify="center"
+            )
 
 # ══════════════════════════════════════════════════════════════════
 #  CLIC → INJECTION DE FAUTE
@@ -495,7 +576,7 @@ class App(ctk.CTk):
             "n_maisons":   self.entries["Nombre de maisons"].get(),
             "n_chateaux":      self.entries["Nombre de chateaux d'eau"].get(),
             "denivele":    self.entries["Dénivelé"].get(),
-            "zone":        self.optmenus["Zone"].get(),
+            "Zone":        self.optmenus["Zone"].get(),
             "surface":     self.entries["Surface"].get(),
             "formule":     self.optmenus["Formule pertes"].get(),
             "rugosite":    self.entries["Rugosité"].get(),
@@ -580,7 +661,7 @@ class App(ctk.CTk):
         lines = []
         w = lines.append
 
-        conso = {"Rurale": 0.15, "Urbaine": 0.30, "Mix": 0.22}.get(p.get("zone", "Mix"), 0.22)
+        conso = {"Rurale": 0.2, "Urbaine": 0.2, "Mix": 0.22}.get(p.get("zone", "Mix"), 0.22)
         try:    denivele = float(p.get("denivele", 0))
         except: denivele = 0.0
         try:    rug = float(p.get("rugosite", 0.02))
@@ -633,17 +714,32 @@ class App(ctk.CTk):
         w("[PIPES]")
         w(";ID              \tNode1           \tNode2           \tLength      \tDiameter    \tRoughness   \tMinorLoss   \tStatus")
         len_main = round(math.sqrt(surface * 1e6) / max(len(all_juncs), 1), 1)
-        len_sec  = round(len_main * 0.1, 1)   # conduites secondaires plus courtes
-        try:    diam_max = int(p.get("diam_max", 200))
-        except: diam_max = 200
-        try:    diam_min = int(p.get("diam_min", 50))
-        except: diam_min = 50
+        len_sec  = round(len_main * 0.1, 1)
 
         for k, (u, v, ed) in enumerate(self._G.edges(data=True)):
-            etype  = ed.get("etype", "main")
+            # 1. On récupère les types des deux nœuds connectés
+            type_u = self._G.nodes[u].get("type")
+            type_v = self._G.nodes[v].get("type")
+            
+            # 2. Logique de détermination du diamètre
+            # Si l'un des deux nœuds est un chateau d'eau -> 900
+            if type_u == "chateau" or type_v == "chateau":
+                diam = 900
+                etype = "main"
+            # Si l'un des deux nœuds est une maison -> 400
+            elif type_u == "house" or type_v == "house":
+                diam = 400
+                etype = "secondary"
+            # Sinon (entre deux jonctions) -> 750
+            else:
+                diam = 750
+                etype = "main"
+
+            # 3. Détermination de la longueur
             length = len_sec if etype == "secondary" else len_main
-            diam   = diam_min if etype == "secondary" else diam_max
-            w(f" P{k+1:<15}\t{u:<16}\t{v:<16}\t{length:<12}\t{diam:<12}\t{rug:<12}\t0           \tOpen  \t;")
+            
+            # 4. Écriture de la ligne
+            w(f" P{k+1:<15}\t{u:<16}\t{v:<16}\t{length:<12}\t{diam:<12}\t{rug:<12}\t0           \tOpen  \t;")
         w("")
 
         w("[PUMPS]"); w(";ID  \tNode1  \tNode2  \tParameters"); w("")
