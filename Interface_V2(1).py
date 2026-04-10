@@ -286,6 +286,8 @@ class App(ctk.CTk):
             mapping = {old_node: f"J{i}" for i, old_node in enumerate(G.nodes())}
             G = nx.relabel_nodes(G, mapping)
             pos = nx.spring_layout(G, k=0.3, iterations=300, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
+            for node in G.nodes():
+                G.nodes[node]["type"] = "junction"
 
             # Pour rajouter les maisons supplémentaires
             if n_maisons != 2**order:
@@ -329,10 +331,9 @@ class App(ctk.CTk):
             mapping = {node: node.replace("MJ", "M") for node in G.nodes() if node.startswith("MJ")}
             G = nx.relabel_nodes(G, mapping) 
             pos = {mapping.get(k, k): v for k, v in pos.items()}
-            print(G.nodes())
 
     
-        else:
+        else:       # zone urbaine
                 
                 #len_pipes = 0.85         
                 iter = 500 
@@ -342,7 +343,6 @@ class App(ctk.CTk):
 
                 mapping = {old_node: f"J{i+1}" for i, old_node in enumerate(G.nodes())}
                 G = nx.relabel_nodes(G, mapping)
-                print(G.nodes())
                 edges = list(G.edges())
                 to_remove = random.sample(edges, int(len(edges) * 0.10))
                 G.remove_edges_from(to_remove)
@@ -392,9 +392,11 @@ class App(ctk.CTk):
 
         w   = max(self.cv.winfo_width(),  200)
         h   = max(self.cv.winfo_height(), 200)
+        margin_x = 0.05*w
+        margin_y = 0.05*h
         for i in pos:
-            pos[i][0] = ((pos[i][0] + 1)/2)*w
-            pos[i][1] = ((pos[i][1] + 1)/2)*h
+            pos[i][0] = margin_x + ((pos[i][0]+1)/2) * (w-2*margin_x)
+            pos[i][1] = margin_y + ((pos[i][1] + 1)/2) * (h-2*margin_y)
 
         return G, pos
         
@@ -597,9 +599,7 @@ class App(ctk.CTk):
             return
         self._params     = params
         self._G          = self._build_graph(params)[0]
-        #print(self._G.nodes())
         self._node_state = {n: "normal" for n in self._G.nodes()}
-        #print(self._node_state)
         self._redraw()
 
         n_houses = sum(1 for _, d in self._G.nodes(data=True) if d.get("type") == "house")
