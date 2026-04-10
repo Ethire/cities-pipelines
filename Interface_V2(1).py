@@ -717,28 +717,23 @@ class App(ctk.CTk):
         len_sec  = round(len_main * 0.1, 1)
 
         for k, (u, v, ed) in enumerate(self._G.edges(data=True)):
-            # 1. On récupère les types des deux nœuds connectés
             type_u = self._G.nodes[u].get("type")
             type_v = self._G.nodes[v].get("type")
             
-            # 2. Logique de détermination du diamètre
-            # Si l'un des deux nœuds est un chateau d'eau -> 900
+            # Si chateau d'eau -> 900
             if type_u == "chateau" or type_v == "chateau":
                 diam = 900
                 etype = "main"
-            # Si l'un des deux nœuds est une maison -> 400
+            # Si maison -> 400
             elif type_u == "house" or type_v == "house":
                 diam = 400
                 etype = "secondary"
-            # Sinon (entre deux jonctions) -> 750
+            # Si autres jonctions -> 750
             else:
                 diam = 750
                 etype = "main"
 
-            # 3. Détermination de la longueur
             length = len_sec if etype == "secondary" else len_main
-            
-            # 4. Écriture de la ligne
             w(f" P{k+1:<15}\t{u:<16}\t{v:<16}\t{length:<12}\t{diam:<12}\t{rug:<12}\t0           \tOpen  \t;")
         w("")
 
