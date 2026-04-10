@@ -278,23 +278,22 @@ class App(ctk.CTk):
         random.seed(20)
         G = nx.Graph()
 
-       # zone  = params["Zone"]
 
         if zone == "Rurale":
             order = math.trunc(math.log(n_maisons)/math.log(2)) # rajouter des maisons au hasard (difference entre puissance de 2 et nb voulu)
             G = nx.binomial_tree(order)  # sorte d'arbre, d'ordre n, soit 2**n noeuds, forme un peu aléatoire
-            mapping = {old_node: f"J{i}" for i, old_node in enumerate(G.nodes())}
+            mapping = {old_node: f"J{i+1}" for i, old_node in enumerate(G.nodes())}
             G = nx.relabel_nodes(G, mapping)
             pos = nx.spring_layout(G, k=0.3, iterations=300, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
             for node in G.nodes():
                 G.nodes[node]["type"] = "junction"
 
-            # Pour rajouter les maisons supplémentaires
+            # Pour rajouter les jonctions supplémentaires
             if n_maisons != 2**order:
                 ajout = n_maisons - 2**order
                 noeuds_existants = list(G.nodes())
                 
-                for i in range (0, ajout):
+                for i in range (1, ajout+1):
                     noeud_ajout = random.choice(noeuds_existants)
                     nouv_noeud = 2**order + i
                     G.add_node(f"J{nouv_noeud}", type="junction")
@@ -323,7 +322,6 @@ class App(ctk.CTk):
                 edge_vector = np.array(pos[i]) - np.array(pos[parent])
                 perp_vector = np.array([-edge_vector[1], edge_vector[0]]) * random.choice([-1, 1])  # on multiplie par 1 ou -1 pour avoir les maisons aléatoirement à droite ou à gauche de la rue
                 perp_vector = perp_vector / np.linalg.norm(perp_vector) * 0.05   # à modifier si envie, c'est la distance du tuyau jusqu'à la maison
-                #perp_vector += np.array([random.uniform(0.05, 0.05), random.uniform(-0.05, 0.05)])
                 nouv_maison = f"M{i}"
                 G.add_node(nouv_maison, type="house")
                 G.add_edge(i, nouv_maison)
@@ -675,7 +673,7 @@ class App(ctk.CTk):
         fautes = [n for n, s in self._node_state.items() if s != "normal"]
 
         w("[TITLE]")
-        w(f"; Zone={p.get('zone')} | Maisons={p.get('n_maisons')} | Chateaux d'eau={p.get('n_chateaux')}")
+        w(f"; Zone={p.get('Zone')} | Maisons={p.get('n_maisons')} | Chateaux d'eau={p.get('n_chateaux')}")
         w(f"; Fautes actives : {fautes if fautes else 'aucune'}")
         w("")
 
