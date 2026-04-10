@@ -14,6 +14,8 @@ G = nx.Graph()
 
 order = math.trunc(math.log(nb_maisons)/math.log(2)) # rajouter des maisons au hasard (difference entre puissance de 2 et nb voulu)
 G = nx.binomial_tree(order)  # sorte d'arbre, d'ordre n, soit 2**n noeuds, forme un peu aléatoire
+mapping = {old_node: f"J{i}" for i, old_node in enumerate(G.nodes())}
+G = nx.relabel_nodes(G, mapping)
 pos = nx.spring_layout(G, k=0.3, iterations=300, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
 
 
@@ -25,11 +27,10 @@ if nb_maisons != 2**order:
     for i in range (0, ajout):
         noeud_ajout = random.choice(noeuds_existants)
         nouv_noeud = 2**order + i
-        G.add_node(nouv_noeud)
-        G.add_edge(nouv_noeud, noeud_ajout)
-        pos[nouv_noeud] = np.array([pos[noeud_ajout][0] + 0.2*random.uniform(-1, 1), pos[noeud_ajout][1] + 0.2*random.uniform(-1, 1)])   
-        noeuds_existants.append(nouv_noeud)
-
+        G.add_node(f"J{nouv_noeud}", type="junction")
+        G.add_edge(f"J{nouv_noeud}", noeud_ajout)
+        pos[f"J{nouv_noeud}"] = np.array([pos[noeud_ajout][0] + 0.2*random.uniform(-1, 1), pos[noeud_ajout][1] + 0.2*random.uniform(-1, 1)])   
+        noeuds_existants.append(f"J{nouv_noeud}")
 pos = nx.spring_layout(G, k=0.3, iterations=300, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible 
 
 
@@ -43,7 +44,6 @@ for i in range(1, nb_chateau+1):
     G.add_node(chateau_node, type="chateau")
     G.add_edge(chateau_node, noeud_chateau)
     pos[chateau_node] = np.array([pos[noeud_chateau][0] + 0.2 * random.uniform(-1, 1), pos[noeud_chateau][1] + 0.2 * random.uniform(-1, 1)])
-
 pos = nx.spring_layout(G, k=0.3, iterations=500, seed=30)   # permet d'avoir une forme où les noeuds se croisent le moins possible, avant d'ajouter les maisons
 
 
@@ -73,12 +73,13 @@ for i in list(G.nodes())[0:nb_maisons]:
     edge_vector = np.array(pos[i]) - np.array(pos[parent])
     perp_vector = np.array([-edge_vector[1], edge_vector[0]]) * random.choice([-1, 1])  # on multiplie par 1 ou -1 pour avoir les maisons aléatoirement à droite ou à gauche de la rue
     perp_vector = perp_vector / np.linalg.norm(perp_vector) * 0.05   # à modifier si envie, c'est la distance du tuyau jusqu'à la maison
-    #perp_vector += np.array([random.uniform(0.05, 0.05), random.uniform(-0.05, 0.05)])
     nouv_maison = f"M{i}"
     G.add_node(nouv_maison, type="house")
     G.add_edge(i, nouv_maison)
     pos[nouv_maison] = np.array(pos[i]) + perp_vector
-
+mapping = {node: node.replace("MJ", "M") for node in G.nodes() if node.startswith("MJ")}
+G = nx.relabel_nodes(G, mapping) 
+pos = {mapping.get(k, k): v for k, v in pos.items()}
 
 
 
@@ -87,4 +88,4 @@ nx.draw(G, pos, with_labels=True)
 plt.show()
 
 
-# finir la fonction "_build_graph(self, params):" par "return G"
+print(pos)
