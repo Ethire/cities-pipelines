@@ -2,6 +2,30 @@ import warnings
 warnings.filterwarnings('ignore')  # Supprimer TOUS les warnings (TSNet, wntr, numpy) pour une meilleur lisibilité de l'output
 import tsnet
 import numpy as np
+import matplotlib.pyplot as plt
+from file_export import *
+
+# --- Compatibility patch: tsnet temporarily assigns pipe.roughness = 0
+# during initialization, but wntr >= 1.x rejects non-positive values.
+# We relax the validator to allow zero, restoring tsnet's expected behavior.
+import wntr.utils.check_values as _wntr_check
+import wntr.network.elements as _wntr_elements
+
+_original_check = _wntr_check._check_positive_non_zero_float
+
+def _check_non_negative_float(value, property_name):
+    # Allow zero for "Pipe roughness" (tsnet sets it transiently),
+    # keep strict validation for everything else.
+    if property_name == "Pipe roughness":
+        value = float(value)
+        if value < 0:
+            raise ValueError(f"{property_name} must be greater than or equal to zero")
+        return value
+    return _original_check(value, property_name)
+
+# Patch the symbol that wntr.network.elements actually imported.
+_wntr_elements._check_positive_non_zero_float = _check_non_negative_float
+# --- end of compatibility patch
 
 
 #------On modifie le fichier INP à la ligne 192 --------------
@@ -224,7 +248,11 @@ if __name__ == "__main__":
         print(f"  Pression {data['start_node']} (moy) : {np.nanmean(data['pressure_start']):.2f} bar")
         print(f"  Pression {data['end_node']} (moy) : {np.nanmean(data['pressure_end']):.2f} bar")
         print(f"  Vitesse (moy)         : {np.nanmean(data['velocity']):.4f} m/s")
-        
+
+        plt.plot(np.array(results['time']), np.array(data['velocity']))
+        plt.title(f"Pipe {pid} : velocity over time")
+        plt.show()
+
         # Affichage des capteurs cassés et du nombre de valeurs manquantes
 
         nan_count_start = np.isnan(data['pressure_start']).sum()
