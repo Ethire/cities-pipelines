@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog
 import math, random, networkx as nx
+<<<<<<< HEAD
 from perlin_noise import PerlinNoise
 import numpy as np
 
@@ -11,6 +12,17 @@ def pnoise2(x, y):
     # On simule le comportement de pnoise2 (valeurs entre -1 et 1)
     return _noise_generator([x, y]) * 2.0
 
+=======
+#from noise import pnoise2
+import numpy as np
+
+from perlin_noise import PerlinNoise
+
+_noise = PerlinNoise(octaves=4)
+
+def pnoise2(x, y):
+    return _noise([x, y])
+>>>>>>> 7b2e80c45f7df02e56361cc50f28cecc73c93fdb
 
 def get_elevation(x, y, hauteur_min=100, hauteur_max=150):
     """
