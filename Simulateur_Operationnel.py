@@ -242,12 +242,18 @@ if __name__ == "__main__":
     
     # 5. Pour les data, on sélectionne la pression avec data[node], vitesse data[velocity], ici c'est la moyenne pour l'instant ( pour les tests )
 
+    en_tete_export = "t|"
+    liste_export = []
+    liste_export.append(results['time'])
 
     for pid, data in results['pipes'].items():
         print(f"\nTuyau: {pid} ({data['start_node']} -> {data['end_node']})")
         print(f"  Pression {data['start_node']} (moy) : {np.nanmean(data['pressure_start']):.2f} bar")
         print(f"  Pression {data['end_node']} (moy) : {np.nanmean(data['pressure_end']):.2f} bar")
         print(f"  Vitesse (moy)         : {np.nanmean(data['velocity']):.4f} m/s")
+
+        en_tete_export += pid+"|"
+        liste_export.append(list(data['velocity']))
 
         plt.plot(np.array(results['time']), np.array(data['velocity']))
         plt.title(f"Pipe {pid} : velocity over time")
@@ -265,3 +271,6 @@ if __name__ == "__main__":
              print(f"  [!] Capteur de pression cassé sur {data['end_node']} ({nan_count_end} valeurs manquantes)")
         if nan_count_v > 0:
              print(f"  [!] Capteur de vitesse cassé sur {pid} ({nan_count_v} valeurs manquantes)")
+
+    en_tete_export = en_tete_export[:-1]
+    list_to_csv(en_tete_export, liste_export)
