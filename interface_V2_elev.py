@@ -2,8 +2,14 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog
 import math, random, networkx as nx
-from noise import pnoise2
+from perlin_noise import PerlinNoise
 import numpy as np
+
+# Remplacement de la librairie 'noise' par 'perlin-noise' (pas réussi à lancer l'autre)
+_noise_generator = PerlinNoise(octaves=2, seed=42)
+def pnoise2(x, y):
+    # On simule le comportement de pnoise2 (valeurs entre -1 et 1)
+    return _noise_generator([x, y]) * 2.0
 
 
 def get_elevation(x, y, hauteur_min=100, hauteur_max=150):
@@ -173,8 +179,8 @@ class App(ctk.CTk):
         self.optmenus["Formule pertes"] = self._optmenu(
             f3, 0, 0, "Formule pertes de charge", ["Darcy-Weisbach", "Hazen-Williams"])
         self.entries["Rugosité"] = self.field(f3, 0, 1, "Rugosité", "D-W: 0.02 | H-W: 130")
-        self.entries["Diamètre min"] = self.field(f3, 1, 0, "Diamètre min (mm)", "ex : 50")
-        self.entries["Diamètre max"] = self.field(f3, 1, 1, "Diamètre max (mm)", "ex : 300")
+        self.entries["Diamètre min"] = self.field(f3, 1, 0, "Diamètre min (mm)", "ex : 20")
+        self.entries["Diamètre max"] = self.field(f3, 1, 1, "Diamètre max (mm)", "ex : 150")
 
         row_idx = self.section(scroll, row_idx, "04", "Simulation")
         f5 = ctk.CTkFrame(scroll, corner_radius=12, fg_color=BG_CARD, border_width=1, border_color=BORDER)
@@ -260,7 +266,7 @@ class App(ctk.CTk):
             (NODE_HOUSE, "Maison"),
             (NODE_FAULT, "Capteur cassé"),
             (NODE_SURGE, "Demande ×5"),
-            (NODE_ZERO, "Pression nulle"),
+            (NODE_ZERO, "Fuite"),
         ]:
             f = ctk.CTkFrame(leg, fg_color="transparent")
             f.pack(side="left", padx=10)
@@ -587,7 +593,7 @@ class App(ctk.CTk):
             (" Normal", "normal", ACCENT),
             (" Capteur cassé", "broken", NODE_FAULT),
             (" Demande × 5", "surge", NODE_SURGE),
-            (" Pression nulle", "zero", NODE_ZERO),
+            (" Fuite", "zero", NODE_ZERO),
         ]:
             ctk.CTkButton(popup, text=label, height=36, corner_radius=8,
                           font=ctk.CTkFont(size=12), fg_color=BG_INPUT,
@@ -733,8 +739,8 @@ class App(ctk.CTk):
         except:
             hauteur_max = 150.0
 
-        # demande individuelle par maison en L/s
-        demande_maison = conso * 1000 / 86400
+        # demande individuelle par maison en L/s (débit instantané pour simulation transitoire)
+        demande_maison = 0.2
 
         fautes = [n for n, s in self._node_state.items() if s != "normal"]
 
@@ -797,21 +803,33 @@ class App(ctk.CTk):
         len_main = round(math.sqrt(surface * 1e6) / max(len(all_juncs), 1), 1)
         len_sec = round(len_main * 0.1, 1)
 
+        try:
+            diam_min = float(p.get("diam_min", 20))
+        except:
+            diam_min = 20.0
+            
+        try:
+            diam_max = float(p.get("diam_max", 150))
+        except:
+            diam_max = 150.0
+            
+        diam_inter = round((diam_min + diam_max) / 2.0, 1)
+
         for k, (u, v, ed) in enumerate(self._G.edges(data=True)):
             type_u = self._G.nodes[u].get("type")
             type_v = self._G.nodes[v].get("type")
 
-            # Si chateau d'eau -> 900
+            # Si chateau d'eau -> diam_max
             if type_u == "chateau" or type_v == "chateau":
-                diam = 900
+                diam = diam_max
                 etype = "main"
-            # Si maison -> 400
+            # Si maison -> diam_min
             elif type_u == "house" or type_v == "house":
-                diam = 400
+                diam = diam_min
                 etype = "secondary"
-            # Si autres jonctions -> 750
+            # Si autres jonctions -> diam_intermédiaire
             else:
-                diam = 750
+                diam = diam_inter
                 etype = "main"
 
             length = len_sec if etype == "secondary" else len_main
