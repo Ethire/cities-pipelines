@@ -3,7 +3,8 @@
 # 1. Installation de Python
 Vous devez installer le langage Python sur votre machine.  
 - **Windows / macOS :**  
-Allez sur [python.org](python.org).  
+Allez sur
+[Python](www.python.org)   
 Téléchargez la version 3.12, les suivantes ne fonctionnent pas avec toutes les bibliothèques.  
 IMPORTANT (Windows) : Lors de l'installation, cochez absolument la case "Add Python to PATH" avant de cliquer sur Install Now.  
 - **Linux :**  
