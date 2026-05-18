@@ -1,4 +1,7 @@
 import warnings
+
+from pandas.core.indexing import convert_from_missing_indexer_tuple
+
 warnings.filterwarnings('ignore')  # Supprimer TOUS les warnings (TSNet, wntr, numpy) pour une meilleur lisibilité de l'output
 import tsnet
 import numpy as np
@@ -40,9 +43,33 @@ def extract_faults_from_inp(inp_file):
     broken_sensors = set()
     leak_nodes = {}   # dict : {node_id: leak_coeff} pour modifier les valeurs des fuites
     surge_nodes = set()
-    
+    tf = 20           # default simulation time
+
     with open(inp_file, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
+            if 'DURATION' in line.upper():
+                parts = line.split()
+                print(parts)
+                if len(parts) <= 1:
+                    continue
+                time_str = parts[1]
+                if not (':' in time_str):
+                    tf = int(time_str)
+                    print(f"tf : {tf}")
+                    continue
+                else:
+                    time_str_spl= time_str.split(':')
+                    if len(time_str_spl) == 2:
+                        minutes, seconds = time_str.split(':')
+                        tf = int(minutes) * 60 + int(seconds)
+                        print(f"tf : {tf}")
+                        continue
+                    elif len(time_str_spl) == 3:
+                        hours, minutes, seconds = time_str.split(':')
+                        tf = int(hours)*3600 + int(minutes) * 60 + int(seconds)
+                        print(f"tf : {tf}")
+                        continue
+
             if ';' in line:
                 comment = line[line.index(';'):].upper()
                 parts = line.split()
@@ -68,11 +95,11 @@ def extract_faults_from_inp(inp_file):
                 # Demande ×5 : [surge]
                 if '[SURGE]' in comment:
                     surge_nodes.add(item_id)
-                                    
-    return leak_nodes, list(broken_sensors), list(surge_nodes)
+
+    return leak_nodes, list(broken_sensors), list(surge_nodes),tf
 
 def simulate_network(inp_file, chosen_pipes, leak_nodes=None, leak_coeff=0.01, 
-                     broken_sensors=None, surge_nodes=None, p_break=0.1):
+                     broken_sensors=None, surge_nodes=None, p_break=0.1, tf=20):
     """
     Simule le réseau et renvoie le temps, les pressions (aux noeuds des tuyaux) 
     et les vitesses pour les tuyaux choisis.
@@ -110,8 +137,10 @@ def simulate_network(inp_file, chosen_pipes, leak_nodes=None, leak_coeff=0.01,
 
     
     dt = 0.1
-    tf = 20  # temps de simulation [s]
-    wavespeed = 1000.
+    wavespeed = 1200.
+    time_list = np.arange(0, tf, dt)
+    Tf = 10.
+    pulse_list = np.where(time_list < Tf, 0.0, 4.0)
     
     # Méthode de la conduite équivalente, dans TSNet, la condition est dt <= L / (2*a). Donc la longueur min doit être L_min = 2 * dt * a
     min_length = 2 * dt * wavespeed
@@ -140,7 +169,14 @@ def simulate_network(inp_file, chosen_pipes, leak_nodes=None, leak_coeff=0.01,
     for surge_id in surge_nodes:
         try:
             node = tm.get_node(surge_id)
-            node.demand_timeseries_list[0].base_value *= 5
+
+            # Basic surge, constant higher demand
+            #node.demand_timeseries_list[0].base_value *= 5
+
+            # Dynamic surge, time based
+            node.pulse_coeff = pulse_list
+            node.pulse_status = True
+
             print(f" Demande ×5 appliquée au noeud : {surge_id}")
         except Exception:
             print(f" Impossible d'appliquer surge sur {surge_id}")
@@ -209,13 +245,13 @@ def simulate_network(inp_file, chosen_pipes, leak_nodes=None, leak_coeff=0.01,
 
 if __name__ == "__main__":
     # Nom du fichier INP à utiliser
-    inp_file = r'reseau.inp'
+    inp_file = r'reseau_exporte.inp'
     
     # Choix des tuyaux à observer ( à voir pour le CSV )
-    chosen_pipes = ['P20', 'P21', 'P22']
+    chosen_pipes = ['P2', 'P9']
     
     # Lecture des fuites, capteurs cassés et surcharges depuis le fichier INP
-    leak_nodes, broken_sensors, surge_nodes = extract_faults_from_inp(inp_file)
+    leak_nodes, broken_sensors, surge_nodes, tf_extracted = extract_faults_from_inp(inp_file)
     
     print("--- Fautes détectées dans le fichier INP ---")
     if leak_nodes:
@@ -234,7 +270,8 @@ if __name__ == "__main__":
         leak_coeff=0.01,
         broken_sensors=broken_sensors,
         surge_nodes=surge_nodes,
-        p_break=0.2
+        p_break=0.0,
+        tf=tf_extracted
     )
     
     print("\n--- Simulation terminée ---")
@@ -255,7 +292,7 @@ if __name__ == "__main__":
         en_tete_export += pid+"|"
         liste_export.append(list(data['velocity']))
 
-        plt.plot(np.array(results['time']), np.array(data['velocity']))
+        plt.plot(np.array(results['time']), np.array(abs(data['velocity'])))
         plt.title(f"Pipe {pid} : velocity over time")
         plt.show()
 

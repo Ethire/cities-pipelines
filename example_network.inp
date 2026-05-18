@@ -1,0 +1,206 @@
+[TITLE]
+; Zone=None | Maisons=20 | Chateaux d'eau=2
+; Fautes actives : ['M3', 'M9', 'M10', 'M13', 'M14']
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern
+ J0              	112.69      	0.0         	                	;  [normal]
+ J1              	114.88      	0.0         	                	;  [normal]
+ J2              	113.35      	0.0         	                	;  [normal]
+ J3              	118.73      	0.0         	                	;  [normal]
+ J4              	114.18      	0.0         	                	;  [normal]
+ J5              	115.52      	0.0         	                	;  [normal]
+ J6              	114.69      	0.0         	                	;  [normal]
+ J7              	114.41      	0.0         	                	;  [normal]
+ J8              	113.98      	0.0         	                	;  [normal]
+ J9              	117.53      	0.0         	                	;  [normal]
+ J10             	117.2       	0.0         	                	;  [normal]
+ J11             	117.51      	0.0         	                	;  [normal]
+ J12             	113.9       	0.0         	                	;  [normal]
+ J13             	118.06      	0.0         	                	;  [normal]
+ J14             	110.57      	0.0         	                	;  [normal]
+ J15             	118.21      	0.0         	                	;  [normal]
+ J16             	114.82      	0.0         	                	;  [normal]
+ J17             	111.23      	0.0         	                	;  [normal]
+ J18             	114.99      	0.0         	                	;  [normal]
+ J19             	113.67      	0.0         	                	;  [normal]
+ M0              	116.71      	0.2         	                	;  [normal]
+ M1              	112.89      	0.2         	                	;  [normal]
+ M2              	115.07      	0.2         	                	;  [normal]
+ M3              	117.31      	1.0         	                	;  [surge]
+ M4              	109.99      	0.2         	                	;  [normal]
+ M5              	111.09      	0.2         	                	;  [normal]
+ M6              	113.25      	0.2         	                	;  [normal]
+ M7              	114.71      	0.2         	                	;  [normal]
+ M8              	112.95      	0.2         	                	;  [normal]
+ M9              	113.97      	0           	                	;  [zero]
+ M10             	111.32      	1.0         	                	;  [surge]
+ M11             	108.06      	0.2         	                	;  [normal]
+ M12             	117.93      	0.2         	                	;  [normal]
+ M13             	111.79      	1.0         	                	;  [surge]
+ M14             	115.11      	0.2         	                	;  [broken]
+ M15             	117.15      	0.2         	                	;  [normal]
+ M16             	113.26      	0.2         	                	;  [normal]
+ M17             	114.31      	0.2         	                	;  [normal]
+ M18             	114.84      	0.2         	                	;  [normal]
+ M19             	119.55      	0.2         	                	;  [normal]
+
+[RESERVOIRS]
+;ID              	Head        	Pattern
+ C1              	130.9       	 	;
+ C2              	125.75      	 	;
+
+[TANKS]
+;ID  	Elev  	InitLevel  	MinLevel  	MaxLevel  	Diameter  	MinVol  	VolCurve
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ P1              	J0              	J1              	50.0        	85.0        	130.0       	0           	Open  	;
+ P2              	J0              	J2              	50.0        	85.0        	130.0       	0           	Open  	;
+ P3              	J0              	J4              	50.0        	85.0        	130.0       	0           	Open  	;
+ P4              	J0              	J8              	50.0        	85.0        	130.0       	0           	Open  	;
+ P5              	J0              	M0              	5.0         	20.0        	130.0       	0           	Open  	;
+ P6              	J1              	M1              	5.0         	20.0        	130.0       	0           	Open  	;
+ P7              	J2              	J3              	50.0        	85.0        	130.0       	0           	Open  	;
+ P8              	J2              	J19             	50.0        	85.0        	130.0       	0           	Open  	;
+ P9              	J2              	M2              	5.0         	20.0        	130.0       	0           	Open  	;
+ P10             	J3              	J17             	50.0        	85.0        	130.0       	0           	Open  	;
+ P11             	J3              	M3              	5.0         	20.0        	130.0       	0           	Open  	;
+ P12             	J4              	J5              	50.0        	85.0        	130.0       	0           	Open  	;
+ P13             	J4              	J6              	50.0        	85.0        	130.0       	0           	Open  	;
+ P14             	J4              	J16             	50.0        	85.0        	130.0       	0           	Open  	;
+ P15             	J4              	M4              	5.0         	20.0        	130.0       	0           	Open  	;
+ P16             	J5              	J18             	50.0        	85.0        	130.0       	0           	Open  	;
+ P17             	J5              	M5              	5.0         	20.0        	130.0       	0           	Open  	;
+ P18             	J6              	J7              	50.0        	85.0        	130.0       	0           	Open  	;
+ P19             	J6              	M6              	5.0         	20.0        	130.0       	0           	Open  	;
+ P20             	J7              	M7              	5.0         	20.0        	130.0       	0           	Open  	;
+ P21             	J8              	J9              	50.0        	85.0        	130.0       	0           	Open  	;
+ P22             	J8              	J10             	50.0        	85.0        	130.0       	0           	Open  	;
+ P23             	J8              	J11             	50.0        	85.0        	130.0       	0           	Open  	;
+ P24             	J8              	M8              	5.0         	20.0        	130.0       	0           	Open  	;
+ P25             	J9              	C1              	50.0        	150.0       	130.0       	0           	Open  	;
+ P26             	J9              	M9              	5.0         	20.0        	130.0       	0           	Open  	;
+ P27             	J10             	J12             	50.0        	85.0        	130.0       	0           	Open  	;
+ P28             	J10             	M10             	5.0         	20.0        	130.0       	0           	Open  	;
+ P29             	J11             	J13             	50.0        	85.0        	130.0       	0           	Open  	;
+ P30             	J11             	J14             	50.0        	85.0        	130.0       	0           	Open  	;
+ P31             	J11             	M11             	5.0         	20.0        	130.0       	0           	Open  	;
+ P32             	J12             	M12             	5.0         	20.0        	130.0       	0           	Open  	;
+ P33             	J13             	M13             	5.0         	20.0        	130.0       	0           	Open  	;
+ P34             	J14             	J15             	50.0        	85.0        	130.0       	0           	Open  	;
+ P35             	J14             	M14             	5.0         	20.0        	130.0       	0           	Open  	;
+ P36             	J15             	C2              	50.0        	150.0       	130.0       	0           	Open  	;
+ P37             	J15             	M15             	5.0         	20.0        	130.0       	0           	Open  	;
+ P38             	J16             	M16             	5.0         	20.0        	130.0       	0           	Open  	;
+ P39             	J17             	M17             	5.0         	20.0        	130.0       	0           	Open  	;
+ P40             	J18             	M18             	5.0         	20.0        	130.0       	0           	Open  	;
+ P41             	J19             	M19             	5.0         	20.0        	130.0       	0           	Open  	;
+
+[PUMPS]
+;ID  	Node1  	Node2  	Parameters
+
+[VALVES]
+;ID  	Node1  	Node2  	Diameter  	Type  	Setting  	MinorLoss
+
+[TAGS]
+[DEMANDS]
+[STATUS]
+[QUALITY]
+;Node            	InitQual
+; [CAPTEUR CASSÉ] M14  (type: house)
+
+[PATTERNS]
+[CURVES]
+[CONTROLS]
+[RULES]
+[ENERGY]
+ Global Efficiency  	75
+ Global Price  	0
+ Demand Charge  	0
+[EMITTERS]
+[SOURCES]
+[REACTIONS]
+ Order Bulk 	1
+ Order Tank 	1
+ Order Wall 	1
+ Global Bulk 	0
+ Global Wall 	0
+ Limiting Potential 	0
+ Roughness Correlation 	0
+[MIXING]
+[TIMES]
+ Duration           	60:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	0:05 
+ Pattern Timestep   	1:00 
+ Report Timestep    	1:00 
+ Start ClockTime    	12 am
+ Statistic          	NONE
+[REPORT]
+ Status 	No
+ Summary 	No
+ Page 	0
+[OPTIONS]
+ Units              	LPS
+ Headloss           	H-W
+ Specific Gravity   	1
+ Viscosity          	1
+ Trials             	40
+ Accuracy           	0.001
+ Unbalanced         	Continue 10
+ Demand Multiplier  	1.0
+ Quality            	None mg/L
+ Tolerance          	0.01
+[COORDINATES]
+;Node  	X-Coord  	Y-Coord
+ J0              	5751.16         	4597.68         
+ J1              	5857.11         	5244.96         
+ J2              	7126.99         	5431.47         
+ J3              	8337.42         	5878.40         
+ J4              	6570.01         	2956.36         
+ J5              	6773.34         	1658.53         
+ J6              	7688.66         	2380.87         
+ J7              	8534.19         	1885.71         
+ J8              	3883.93         	5348.48         
+ J9              	2713.50         	5333.02         
+ J10             	3173.06         	4414.94         
+ J11             	2951.11         	6798.07         
+ J12             	2537.86         	3701.87         
+ J13             	2986.84         	7636.94         
+ J14             	1947.66         	7852.41         
+ J15             	1127.16         	8750.97         
+ J16             	6137.67         	2291.29         
+ J17             	9228.02         	6267.91         
+ J18             	6920.42         	674.79          
+ J19             	7496.28         	6213.80         
+ C1              	1757.60         	5243.52         
+ C2              	500.00          	9438.01         
+ M0              	5529.12         	4634.03         
+ M1              	6079.16         	5208.61         
+ M2              	7010.38         	5623.90         
+ M3              	8415.35         	5667.33         
+ M4              	6368.67         	2855.91         
+ M5              	6995.63         	1693.36         
+ M6              	7791.59         	2580.94         
+ M7              	8647.89         	2079.87         
+ M8              	3799.99         	5139.72         
+ M9              	2716.47         	5108.03         
+ M10             	3352.07         	4278.63         
+ M11             	2761.91         	6676.31         
+ M12             	2705.87         	3552.21         
+ M13             	3211.64         	7627.37         
+ M14             	2110.65         	8007.52         
+ M15             	1293.31         	8902.69         
+ M16             	5949.02         	2413.92         
+ M17             	9137.86         	6474.06         
+ M18             	7142.95         	708.06          
+ M19             	7292.81         	6309.85         
+[VERTICES]
+[LABELS]
+[BACKDROP]
+ DIMENSIONS 	0.00 	0.00 	10000.00 	10000.00
+ UNITS 	None
+ FILE 	
+ OFFSET 	0.00 	0.00
+[END]

@@ -2,7 +2,6 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog
 import math, random, networkx as nx
-<<<<<<< HEAD
 from perlin_noise import PerlinNoise
 import numpy as np
 
@@ -12,7 +11,6 @@ def pnoise2(x, y):
     # On simule le comportement de pnoise2 (valeurs entre -1 et 1)
     return _noise_generator([x, y]) * 2.0
 
-=======
 #from noise import pnoise2
 import numpy as np
 
@@ -22,7 +20,6 @@ _noise = PerlinNoise(octaves=4)
 
 def pnoise2(x, y):
     return _noise([x, y])
->>>>>>> 7b2e80c45f7df02e56361cc50f28cecc73c93fdb
 
 def get_elevation(x, y, hauteur_min=100, hauteur_max=150):
     """
@@ -201,7 +198,7 @@ class App(ctk.CTk):
         row_idx += 1
         self.optmenus["Mode simulation"] = self._optmenu(
             f5, 0, 0, "Mode", ["Statique (0h)", "Dynamique (24h)", "Personnalisé"])
-        self.entries["Durée"] = self.field(f5, 0, 1, "Durée (h)", "ex : 12")
+        self.entries["Durée"] = self.field(f5, 0, 1, "Durée (s)", "ex : 20, 15:00")
 
         row_idx = self.section(scroll, row_idx, "05", "Capteurs & Bruit")
         f6 = ctk.CTkFrame(scroll, corner_radius=12, fg_color=BG_CARD, border_width=1, border_color=BORDER)
@@ -866,8 +863,8 @@ class App(ctk.CTk):
                 w(f"; [CAPTEUR CASSÉ] {node}  (type: {ntype})")
         w("")
 
-        dur_map = {"Statique (0h)": "0:00", "Dynamique (24h)": "24:00"}
-        duree = dur_map.get(p.get("mode_sim"), f"{p.get('duree', '0')}:00")
+        dur_map = {"Statique (0h)": "1", "Dynamique (60s)": "60"}
+        duree = dur_map.get(p.get("mode_sim"), f"{p.get('duree', '20')}")
         hl = {"Darcy-Weisbach": "D-W", "Hazen-Williams": "H-W"}.get(p.get("formule", "Darcy-Weisbach"), "D-W")
 
         w("[PATTERNS]");
